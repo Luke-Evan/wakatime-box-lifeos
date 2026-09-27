@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-wakatime-box-lifeos",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Obsidian plugin that writes your WakaTime project, language, editor and category stats into LifeOS daily notes.",
 	"main": "main.js",
 	"type": "module",
