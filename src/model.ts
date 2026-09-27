@@ -1,139 +1,90 @@
-export interface Summary {
-    cumulative_total: CumulativeTotal
-    daily_average: DailyAverage
-    data: Daum[]
-    end: string
-    start: string
+/**
+ * Types for the WakaTime Summaries API.
+ * https://wakatime.com/developers#get-summaries
+ */
+
+/**
+ * One row of a WakaTime breakdown.
+ * Projects, languages, editors, categories, operating systems and dependencies
+ * all share this shape.
+ */
+export interface SummaryEntry {
+	name: string;
+	/** Human readable duration, for example "3 hrs 12 mins". */
+	text: string;
+	/** Duration as "H:MM:SS". */
+	digital: string;
+	/** Duration in decimal hours, for example "3.21". */
+	decimal: string;
+	total_seconds: number;
+	hours: number;
+	minutes: number;
+	seconds: number;
+	/** Share of the day in percent, for example 42.5. */
+	percent: number;
 }
 
-export interface CumulativeTotal {
-    decimal: string
-    digital: string
-    seconds: number
-    text: string
+export interface ProjectEntry extends SummaryEntry {
+	color?: string | null;
 }
 
-export interface DailyAverage {
-    days_including_holidays: number
-    days_minus_holidays: number
-    holidays: number
-    seconds: number
-    seconds_including_other_language: number
-    text: string
-    text_including_other_language: string
-}
-
-export interface Daum {
-    categories: Category[]
-    dependencies: Dependency[]
-    editors: Editor[]
-    grand_total: GrandTotal
-    languages: Language[]
-    machines: Machine[]
-    operating_systems: OperatingSystem[]
-    projects: Project[]
-    range: Range
-}
-
-export interface Category {
-    decimal: string
-    digital: string
-    hours: number
-    minutes: number
-    name: string
-    percent: number
-    seconds: number
-    text: string
-    total_seconds: number
-}
-
-export interface Dependency {
-    decimal: string
-    digital: string
-    hours: number
-    minutes: number
-    name: string
-    percent: number
-    seconds: number
-    text: string
-    total_seconds: number
-}
-
-export interface Editor {
-    decimal: string
-    digital: string
-    hours: number
-    minutes: number
-    name: string
-    percent: number
-    seconds: number
-    text: string
-    total_seconds: number
+export interface MachineEntry extends SummaryEntry {
+	machine_name_id: string;
 }
 
 export interface GrandTotal {
-    decimal: string
-    digital: string
-    hours: number
-    minutes: number
-    text: string
-    total_seconds: number
+	text: string;
+	digital: string;
+	decimal: string;
+	total_seconds: number;
+	hours: number;
+	minutes: number;
 }
 
-export interface Language {
-    decimal: string
-    digital: string
-    hours: number
-    minutes: number
-    name: string
-    percent: number
-    seconds: number
-    text: string
-    total_seconds: number
+/** The day a {@link DailySummary} belongs to. */
+export interface DateRange {
+	date: string;
+	start: string;
+	end: string;
+	text: string;
+	timezone: string;
 }
 
-export interface Machine {
-    decimal: string
-    digital: string
-    hours: number
-    machine_name_id: string
-    minutes: number
-    name: string
-    percent: number
-    seconds: number
-    text: string
-    total_seconds: number
+/** Every breakdown WakaTime reports for a single day. */
+export interface DailySummary {
+	categories: SummaryEntry[];
+	dependencies: SummaryEntry[];
+	editors: SummaryEntry[];
+	languages: SummaryEntry[];
+	machines: MachineEntry[];
+	operating_systems: SummaryEntry[];
+	projects: ProjectEntry[];
+	grand_total: GrandTotal;
+	range: DateRange;
 }
 
-export interface OperatingSystem {
-    decimal: string
-    digital: string
-    hours: number
-    minutes: number
-    name: string
-    percent: number
-    seconds: number
-    text: string
-    total_seconds: number
+export interface CumulativeTotal {
+	decimal: string;
+	digital: string;
+	seconds: number;
+	text: string;
 }
 
-export interface Project {
-    color: any
-    decimal: string
-    digital: string
-    hours: number
-    minutes: number
-    name: string
-    percent: number
-    seconds: number
-    text: string
-    total_seconds: number
+export interface DailyAverage {
+	days_including_holidays: number;
+	days_minus_holidays: number;
+	holidays: number;
+	seconds: number;
+	seconds_including_other_language: number;
+	text: string;
+	text_including_other_language: string;
 }
 
-export interface Range {
-    date: string
-    end: string
-    start: string
-    text: string
-    timezone: string
+/** Response body of GET /api/v1/users/current/summaries. */
+export interface Summary {
+	cumulative_total: CumulativeTotal;
+	daily_average: DailyAverage;
+	data: DailySummary[];
+	start: string;
+	end: string;
 }
