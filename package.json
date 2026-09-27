@@ -21,6 +21,12 @@
 		"daily-notes"
 	],
 	"author": "Luke-Evan",
+	"contributors": [
+		{
+			"name": "complexzeng",
+			"url": "https://github.com/simonla"
+		}
+	],
 	"license": "MIT",
 	"repository": {
 		"type": "git",
