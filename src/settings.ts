@@ -1,6 +1,5 @@
 import { PluginSettingTab, Setting } from "obsidian";
 import type { App } from "obsidian";
-import { API_KEY_URL } from "./constants";
 import { DEFAULT_DISPLAY_MODE, DISPLAY_MODES, isDisplayMode, type DisplayMode } from "./display";
 import { MAX_ITEMS } from "./render";
 import type WakaTimeBoxPlugin from "./main";
@@ -40,13 +39,14 @@ export class WakaTimeBoxSettingTab extends PluginSettingTab {
 		containerEl.empty();
 
 		containerEl.createEl("p", {
-			text: "Writes your WakaTime stats into the LifeOS daily note of the same day. The note is " +
-				"refreshed once per hour, whenever LifeOS creates today's note, and from the command palette.",
+			text: "Writes your WakaTime stats into the LifeOS daily note of the same day. The note is refreshed " +
+				"once per hour and whenever LifeOS creates today's note. Sync immediately with the buttons below, " +
+				"or bind hotkeys to the refresh commands in Obsidian's hotkeys settings.",
 		});
 
 		new Setting(containerEl)
 			.setName("WakaTime API key")
-			.setDesc(`Copy it from ${API_KEY_URL}. It is stored in this vault only.`)
+			.setDesc("It is stored in this vault only.")
 			.addText((text) => {
 				text.setPlaceholder("Enter your API key");
 				text.setValue(this.plugin.settings.apiKey);
@@ -68,6 +68,16 @@ export class WakaTimeBoxSettingTab extends PluginSettingTab {
 					this.plugin.settings.displayMode = isDisplayMode(value) ? value : DEFAULT_DISPLAY_MODE;
 					await this.plugin.saveSettings();
 				});
+			});
+
+		new Setting(containerEl)
+			.setName("Sync now")
+			.setDesc("Fetch the latest stats from WakaTime and update the daily note right away.")
+			.addButton((button) => {
+				button.setButtonText("Today").onClick(() => this.plugin.syncToday());
+			})
+			.addButton((button) => {
+				button.setButtonText("Yesterday").onClick(() => this.plugin.syncYesterday());
 			});
 
 		new Setting(containerEl)

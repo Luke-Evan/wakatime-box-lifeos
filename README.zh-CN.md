@@ -10,7 +10,7 @@
 
 - 拉取当天的 WakaTime 统计，刷新当天 LifeOS 日记中的 ```wakatime 代码块。
 - LifeOS 一创建今天的日记，插件就会自动把统计块填进去，无需手动操作。
-- 每小时自动刷新一次，也可以用命令面板手动刷新。
+- 每小时自动刷新一次；设置页按钮、命令面板或自己绑定的快捷键都可以立即同步。
 - 展示内容可选：**项目（projects）**、**语言（languages）**、**编辑器（editors）**、**类别（categories）**。
 - 可以把任意一天的统计块复制到剪贴板，方便写周报或总结。
 
@@ -75,6 +75,7 @@ npm run lint
 | --- | --- |
 | WakaTime API key | 从 [wakatime.com/api-key](https://wakatime.com/api-key) 获取，只保存在当前仓库中。 |
 | Display data | 写入日记的统计维度：项目 / 语言 / 编辑器 / 类别，默认展示当天耗时最多的 6 条。 |
+| Sync now | 两个按钮，立即拉取今天 / 昨天的统计并更新日记。 |
 
 设置页还会显示当前将要写入的日记路径，方便确认 LifeOS 是否配置正确。
 
@@ -85,6 +86,8 @@ npm run lint
 | Refresh today's stats | 重新拉取今天的数据并更新今天的日记。 |
 | Refresh yesterday's stats | 重新拉取昨天的数据并更新昨天的日记。 |
 | Copy the stats of any date to the clipboard | 弹出日期输入框，把该日期的统计块复制到剪贴板。 |
+
+所有命令都可以在「设置 → 快捷键」中绑定（搜索 *WakaTime*），按一下即可立即同步今天或昨天的统计。
 
 ## 其他说明
 

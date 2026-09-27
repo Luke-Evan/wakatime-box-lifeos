@@ -55,16 +55,12 @@ export default class WakaTimeBoxPlugin extends Plugin {
 		this.addCommand({
 			id: "refresh-today",
 			name: "Refresh today's stats",
-			callback: () => {
-				void this.refresh(today(), true);
-			},
+			callback: () => this.syncToday(),
 		});
 		this.addCommand({
 			id: "refresh-yesterday",
 			name: "Refresh yesterday's stats",
-			callback: () => {
-				void this.refresh(yesterday(), true);
-			},
+			callback: () => this.syncYesterday(),
 		});
 		this.addCommand({
 			id: "copy-stats-for-date",
@@ -99,6 +95,16 @@ export default class WakaTimeBoxPlugin extends Plugin {
 			return;
 		}
 		void this.refresh(today(), false);
+	}
+
+	/** Re-fetches today's stats and updates today's note right away. */
+	syncToday(): void {
+		void this.refresh(today(), true);
+	}
+
+	/** Re-fetches yesterday's stats and updates yesterday's note right away. */
+	syncYesterday(): void {
+		void this.refresh(yesterday(), true);
 	}
 
 	/** Fetches one day ("YYYY-MM-DD") and updates the matching LifeOS daily note. */

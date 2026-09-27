@@ -10,7 +10,7 @@ Keep your [WakaTime](https://wakatime.com/) day inside your [LifeOS](https://git
 
 - Fetches your WakaTime summary of the day and refreshes a fenced `wakatime` code block inside today's LifeOS daily note.
 - Fills the block as soon as LifeOS creates today's note, so there is nothing to do by hand.
-- Refreshes once per hour and on demand from the command palette.
+- Refreshes once per hour, and on demand from the settings buttons, the command palette, or hotkeys you bind yourself.
 - Lets you choose what the box shows: **projects**, **languages**, **editors** or **categories**.
 - Can copy the box of any date to the clipboard, for weekly notes or reports.
 
@@ -75,6 +75,7 @@ npm run lint
 | --- | --- |
 | WakaTime API key | Your key from [wakatime.com/api-key](https://wakatime.com/api-key). It is stored in this vault only. |
 | Display data | Which WakaTime breakdown is written into the note: projects, languages, editors or categories. The six biggest entries of the day are shown. |
+| Sync now | Buttons that fetch today's or yesterday's stats and update the note immediately. |
 
 The settings tab also shows the daily note that is currently targeted, so the LifeOS integration can be verified at a glance.
 
@@ -85,6 +86,8 @@ The settings tab also shows the daily note that is currently targeted, so the Li
 | Refresh today's stats | Re-fetch today and update today's note. |
 | Refresh yesterday's stats | Re-fetch yesterday and update yesterday's note. |
 | Copy the stats of any date to the clipboard | Opens a date prompt and copies that day's box. |
+
+Every command can be bound to a hotkey in Settings → Hotkeys (search for *WakaTime*), so today's or yesterday's stats can be synced with a single key press.
 
 ## Notes
 
