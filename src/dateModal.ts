@@ -1,4 +1,5 @@
-import { Modal, moment, Notice, Setting } from "obsidian";
+import { Modal, Notice, Setting } from "obsidian";
+import { moment } from "./moment";
 import type { App } from "obsidian";
 import { DATE_FORMAT, NOTICE_PREFIX } from "./constants";
 

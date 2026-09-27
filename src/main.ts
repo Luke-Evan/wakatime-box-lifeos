@@ -1,4 +1,5 @@
-import { moment, normalizePath, Notice, Plugin, TFile } from "obsidian";
+import { normalizePath, Notice, Plugin, TFile } from "obsidian";
+import { moment } from "./moment";
 import { API_KEY_URL, DATE_FORMAT, NOTICE_PREFIX, REFRESH_INTERVAL_MS } from "./constants";
 import { DatePromptModal } from "./dateModal";
 import { LifeOsDailyNotes } from "./lifeos";

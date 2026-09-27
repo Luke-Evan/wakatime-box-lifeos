@@ -1,5 +1,6 @@
-import { moment, normalizePath, TFile } from "obsidian";
+import { normalizePath, TFile } from "obsidian";
 import type { App } from "obsidian";
+import { moment } from "./moment";
 
 /** Plugin id of LifeOS (https://github.com/quanru/obsidian-lifeos). */
 export const LIFEOS_PLUGIN_ID = "periodic-para";
