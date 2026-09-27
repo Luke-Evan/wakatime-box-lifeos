@@ -16,7 +16,7 @@ Writes your [WakaTime](https://wakatime.com/) stats into your [LifeOS](https://g
 
 ## Requirements
 
-- Obsidian 1.1.7 or newer
+- Obsidian 1.13.0 or newer (older Obsidian versions keep the last compatible release automatically)
 - [LifeOS](https://github.com/quanru/obsidian-lifeos) enabled, with **Periodic Notes** turned on (the plugin reads LifeOS settings to find the daily note, and never creates notes itself)
 - A [WakaTime](https://wakatime.com/) account; paste your [API key](https://wakatime.com/api-key) into the plugin settings
 

@@ -33,8 +33,6 @@ export default defineConfig(
 		rules: {
 			// "WakaTime" and "LifeOS" are brand names and keep their spelling in UI text.
 			'obsidianmd/ui/sentence-case': 'off',
-			// The declarative settings API is not part of the published Obsidian typings yet.
-			'obsidianmd/settings-tab/prefer-setting-definitions': 'off',
 		},
 	},
 );

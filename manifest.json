@@ -2,7 +2,7 @@
 	"id": "wakatime-box-lifeos",
 	"name": "WakaTime Box for LifeOS",
 	"version": "1.1.1",
-	"minAppVersion": "1.1.7",
+	"minAppVersion": "1.13.0",
 	"description": "Write your WakaTime project, language, editor and category stats into your LifeOS daily note.",
 	"author": "Luke-Evan",
 	"authorUrl": "https://github.com/Luke-Evan",
