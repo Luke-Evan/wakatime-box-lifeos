@@ -1,6 +1,6 @@
 import { normalizePath, Notice, Plugin, TFile } from "obsidian";
 import { moment } from "./moment";
-import { API_KEY_URL, DATE_FORMAT, NOTICE_PREFIX, REFRESH_INTERVAL_MS } from "./constants";
+import { DATE_FORMAT, NOTICE_PREFIX, REFRESH_INTERVAL_MS, TOKEN_URL } from "./constants";
 import { DatePromptModal } from "./dateModal";
 import { LifeOsDailyNotes } from "./lifeos";
 import type { Summary } from "./model";
@@ -119,7 +119,7 @@ export default class WakaTimeBoxPlugin extends Plugin {
 		}
 
 		try {
-			const { summary, fromCache } = await this.wakaTime.getSummary(this.settings.apiKey, date, manual);
+			const { summary, fromCache } = await this.wakaTime.getSummary(this.settings.token, date, manual);
 			await this.updateDailyNote(date, summary, fromCache, manual);
 		} catch (error) {
 			if (manual) {
@@ -163,8 +163,8 @@ export default class WakaTimeBoxPlugin extends Plugin {
 	}
 
 	private copyStatsForDate(): void {
-		if (!this.settings.apiKey) {
-			new Notice(`${NOTICE_PREFIX}add your WakaTime API key in the plugin settings (${API_KEY_URL}).`, 10000);
+		if (!this.settings.token) {
+			new Notice(`${NOTICE_PREFIX}add your WakaTime OAuth token in the plugin settings (${TOKEN_URL}).`, 10000);
 			return;
 		}
 		new DatePromptModal(this.app, (date) => {
@@ -174,7 +174,7 @@ export default class WakaTimeBoxPlugin extends Plugin {
 
 	private async copyStats(date: string): Promise<void> {
 		try {
-			const { summary } = await this.wakaTime.getSummary(this.settings.apiKey, date, true);
+			const { summary } = await this.wakaTime.getSummary(this.settings.token, date, true);
 			const box = renderWakaTimeBox(summary, this.settings.displayMode);
 			const clipboard = navigator.clipboard as Clipboard | undefined;
 			if (!clipboard) {
@@ -190,8 +190,8 @@ export default class WakaTimeBoxPlugin extends Plugin {
 
 	/** What still has to be configured before the plugin can do its job. */
 	private readinessProblem(): string | undefined {
-		if (!this.settings.apiKey) {
-			return `add your WakaTime API key in the plugin settings (${API_KEY_URL}).`;
+		if (!this.settings.token) {
+			return `add your WakaTime OAuth token in the plugin settings (${TOKEN_URL}).`;
 		}
 		const problem = this.lifeOs.getProblem();
 		return problem ? `${problem}.` : undefined;

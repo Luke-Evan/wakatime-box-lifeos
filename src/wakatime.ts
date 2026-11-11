@@ -1,12 +1,22 @@
 import { normalizePath, requestUrl } from "obsidian";
-import type { DataAdapter } from "obsidian";
-import { API_KEY_URL } from "./constants";
+import type { DataAdapter, RequestUrlResponse } from "obsidian";
+import { TOKEN_URL } from "./constants";
 import type { Summary } from "./model";
 
 const SUMMARIES_URL = "https://wakatime.com/api/v1/users/current/summaries";
 
 /** A cached response is reused for one hour, matching the automatic refresh interval. */
 const CACHE_TTL_MS = 60 * 60 * 1000;
+
+/**
+ * OAuth access tokens carry this prefix, so the shape of the stored value tells
+ * us which auth scheme WakaTime expects. Everything else is treated as the
+ * legacy API key that only WakaTime's own plugins may still use for writes.
+ */
+const OAUTH_TOKEN_PREFIX = "waka_tok_";
+
+/** How the token travels in the request. OAuth reads use Bearer, API keys use Basic. */
+type AuthScheme = "bearer" | "basic";
 
 /** Any failure of the WakaTime API, with the HTTP status when there was one. */
 export class WakaTimeError extends Error {
@@ -29,44 +39,72 @@ export interface SummaryResult {
  * small on-disk cache, so restarting Obsidian does not hit the API again.
  */
 export class WakaTimeClient {
+	/** Scheme that worked last time, so the fallback is only tried once. */
+	private scheme?: AuthScheme;
+
 	constructor(private readonly adapter: DataAdapter, private readonly cacheDir: string) {}
 
 	/**
 	 * Returns the summary of one day ("YYYY-MM-DD"), from the cache when it is
 	 * fresh enough, otherwise from the API. Throws a {@link WakaTimeError}.
 	 */
-	async getSummary(apiKey: string, date: string, force = false): Promise<SummaryResult> {
+	async getSummary(token: string, date: string, force = false): Promise<SummaryResult> {
 		if (!force) {
 			const cached = await this.readCache(date);
 			if (cached) {
 				return { summary: cached, fromCache: true };
 			}
 		}
-		const summary = await this.requestSummary(apiKey, date);
+		const summary = await this.requestSummary(token, date);
 		await this.writeCache(date, summary);
 		return { summary, fromCache: false };
 	}
 
-	private async requestSummary(apiKey: string, date: string): Promise<Summary> {
+	/**
+	 * WakaTime reads need an OAuth access token; API keys are refused for stats
+	 * since they are meant to be write-only. The token shape decides which
+	 * scheme is tried first, and the other one gets a single chance as well, so
+	 * a token pasted in either format works.
+	 */
+	private async requestSummary(token: string, date: string): Promise<Summary> {
 		const url = `${SUMMARIES_URL}?start=${encodeURIComponent(date)}&end=${encodeURIComponent(date)}`;
-		try {
-			const response = await requestUrl({
-				url,
-				method: "GET",
-				// The API key travels in a header instead of the query string.
-				headers: {
-					Authorization: `Basic ${toBase64(apiKey)}`,
-					Accept: "application/json",
-				},
-				throw: false,
-			});
-			if (response.status !== 200) {
-				throw new WakaTimeError(describeStatus(response.status), response.status);
+		let failure: WakaTimeError | undefined;
+		for (const scheme of this.schemesFor(token)) {
+			try {
+				return await this.requestWith(url, token, scheme);
+			} catch (error) {
+				const next = toWakaTimeError(error);
+				if (!isAuthFailure(next.status)) {
+					throw next;
+				}
+				// Keep the first failure: it describes the scheme that fits the token.
+				failure ??= next;
 			}
-			return response.json as Summary;
-		} catch (error) {
-			throw toWakaTimeError(error);
 		}
+		throw failure ?? new WakaTimeError("the WakaTime request failed");
+	}
+
+	private async requestWith(url: string, token: string, scheme: AuthScheme): Promise<Summary> {
+		const response = await requestUrl({
+			url,
+			method: "GET",
+			// The token travels in a header instead of the query string.
+			headers: {
+				Authorization: authHeader(token, scheme),
+				Accept: "application/json",
+			},
+			throw: false,
+		});
+		if (response.status !== 200) {
+			throw new WakaTimeError(describeStatus(response.status, serverMessage(response)), response.status);
+		}
+		this.scheme = scheme;
+		return response.json as Summary;
+	}
+
+	private schemesFor(token: string): AuthScheme[] {
+		const preferred = this.scheme ?? (token.startsWith(OAUTH_TOKEN_PREFIX) ? "bearer" : "basic");
+		return preferred === "bearer" ? ["bearer", "basic"] : ["basic", "bearer"];
 	}
 
 	private cachePath(date: string): string {
@@ -103,17 +141,57 @@ export class WakaTimeClient {
 	}
 }
 
-function describeStatus(status: number): string {
+function authHeader(token: string, scheme: AuthScheme): string {
+	return scheme === "bearer" ? `Bearer ${token}` : `Basic ${toBase64(token)}`;
+}
+
+function isAuthFailure(status: number | undefined): boolean {
+	return status === 401 || status === 403;
+}
+
+function describeStatus(status: number, detail?: string): string {
+	const suffix = detail ? ` WakaTime says: ${detail}` : "";
 	switch (status) {
 		case 401:
-			return `WakaTime rejected the API key (401). Copy it again from ${API_KEY_URL}`;
+			return `WakaTime rejected the token (401). Copy your personal OAuth token again from ${TOKEN_URL}.${suffix}`;
 		case 403:
-			return `WakaTime refused the request (403). Check the API key in the plugin settings`;
+			return (
+				"WakaTime refused the request (403). " +
+				`API keys can only send activity, so paste a personal OAuth token from ${TOKEN_URL}.${suffix}`
+			);
 		case 429:
-			return "the WakaTime rate limit was reached (429). Try again later";
+			return `the WakaTime rate limit was reached (429). Try again later.${suffix}`;
 		default:
-			return `the WakaTime API returned status ${status}`;
+			return `the WakaTime API returned status ${status}.${suffix}`;
 	}
+}
+
+/** Pulls the human readable reason out of an error body, when the API sent one. */
+function serverMessage(response: RequestUrlResponse): string | undefined {
+	let body: unknown;
+	try {
+		body = response.json;
+	} catch {
+		return undefined;
+	}
+	if (typeof body !== "object" || body === null) {
+		return undefined;
+	}
+	const record = body as { error?: unknown; errors?: unknown };
+	if (typeof record.error === "string" && record.error.trim().length > 0) {
+		return sentence(record.error);
+	}
+	if (Array.isArray(record.errors)) {
+		const joined = record.errors.filter((entry): entry is string => typeof entry === "string").join(" ");
+		return joined.trim().length > 0 ? sentence(joined) : undefined;
+	}
+	return undefined;
+}
+
+/** Normalizes whitespace and drops the trailing period the API likes to add. */
+function sentence(text: string): string {
+	const collapsed = text.replace(/\s+/g, " ").trim();
+	return collapsed.endsWith(".") ? collapsed.slice(0, -1) : collapsed;
 }
 
 function toWakaTimeError(error: unknown): WakaTimeError {

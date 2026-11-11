@@ -1,18 +1,19 @@
 import { PluginSettingTab } from "obsidian";
 import type { App, SettingDefinition } from "obsidian";
+import { TOKEN_URL } from "./constants";
 import { DEFAULT_DISPLAY_MODE, DISPLAY_MODES, isDisplayMode, type DisplayMode } from "./display";
 import { MAX_ITEMS } from "./render";
 import type WakaTimeBoxPlugin from "./main";
 
 export interface WakaTimeBoxSettings {
-	/** WakaTime API key, stored in the vault's plugin data. */
-	apiKey: string;
+	/** WakaTime personal OAuth token (or a legacy API key), stored in the vault's plugin data. */
+	token: string;
 	/** Which WakaTime breakdown is written into the daily note. */
 	displayMode: DisplayMode;
 }
 
 export const DEFAULT_SETTINGS: WakaTimeBoxSettings = {
-	apiKey: "",
+	token: "",
 	displayMode: DEFAULT_DISPLAY_MODE,
 };
 
@@ -22,11 +23,21 @@ export const DEFAULT_SETTINGS: WakaTimeBoxSettings = {
  */
 export function normalizeSettings(data: unknown): WakaTimeBoxSettings {
 	const stored = (typeof data === "object" && data !== null ? data : {}) as Record<string, unknown>;
-	const apiKey = typeof stored.apiKey === "string" ? stored.apiKey.trim() : DEFAULT_SETTINGS.apiKey;
 	return {
-		apiKey,
+		// "apiKey" is the name 1.2.0 and older used for the same field.
+		token: firstText(stored.token, stored.apiKey),
 		displayMode: isDisplayMode(stored.displayMode) ? stored.displayMode : DEFAULT_SETTINGS.displayMode,
 	};
+}
+
+/** First non-empty string of the candidates, so renamed fields keep working. */
+function firstText(...candidates: unknown[]): string {
+	for (const candidate of candidates) {
+		if (typeof candidate === "string" && candidate.trim().length > 0) {
+			return candidate.trim();
+		}
+	}
+	return DEFAULT_SETTINGS.token;
 }
 
 /**
@@ -47,13 +58,15 @@ export class WakaTimeBoxSettingTab extends PluginSettingTab {
 					"refresh commands in Obsidian's hotkeys settings to sync with a single key press.",
 			},
 			{
-				name: "WakaTime API key",
-				desc: "It is stored in this vault only.",
-				aliases: ["token", "secret"],
+				name: "WakaTime OAuth token",
+				desc:
+					"WakaTime only lets API keys send activity, so reading your stats needs a personal OAuth token from " +
+					`${TOKEN_URL}. It is stored in this vault only.`,
+				aliases: ["api key", "token", "secret"],
 				control: {
 					type: "text",
-					key: "apiKey",
-					placeholder: "Enter your API key",
+					key: "token",
+					placeholder: "waka_tok_...",
 				},
 			},
 			{
@@ -85,9 +98,9 @@ export class WakaTimeBoxSettingTab extends PluginSettingTab {
 		];
 	}
 
-	/** Keeps stored values sane: trim the key, ignore unknown display modes. */
+	/** Keeps stored values sane: trim the token, ignore unknown display modes. */
 	setControlValue(key: string, value: unknown): void | Promise<void> {
-		if (key === "apiKey" && typeof value === "string") {
+		if (key === "token" && typeof value === "string") {
 			value = value.trim();
 		}
 		if (key === "displayMode" && !isDisplayMode(value)) {

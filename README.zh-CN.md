@@ -18,7 +18,7 @@
 
 - Obsidian 1.13.0 及以上（更旧的 Obsidian 会自动停留在最后一个兼容版本）
 - 已启用 [LifeOS](https://github.com/quanru/obsidian-lifeos) 并打开 **Periodic Notes**（插件读取 LifeOS 设置定位日记，自己不会创建笔记）
-- 一个 [WakaTime](https://wakatime.com/) 账号；在插件设置中填入 [API key](https://wakatime.com/api-key)
+- 一个 [WakaTime](https://wakatime.com/) 账号；在插件设置中填入 [个人 OAuth token](https://wakatime.com/oauth)（API key 是只写的，读不到统计）
 
 ## 安装
 
